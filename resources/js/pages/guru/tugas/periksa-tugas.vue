@@ -25,7 +25,7 @@
             </div>
 
             <div class="divide-y divide-neutral-100">
-                <div v-for="(item, i) in $page.props.jawaban" :key="i" 
+                <div v-for="(item, i) in ($page.props.jawaban as any)" :key="i" 
                     class="group grid grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-blue-50/30 transition-colors relative">
                     
                     <div class="col-span-5 md:col-span-4 flex items-center gap-3">
@@ -58,9 +58,9 @@
                     </div>
 
                     <div class="col-span-2 md:col-span-3 flex justify-center">
-                        <div v-if="item.nilai || item.nilai === 0" 
+                        <div v-if="item.nilai" 
                              class="px-3 py-1 rounded-full bg-green-100 border border-green-200 text-green-700 text-xs font-bold shadow-sm">
-                            {{ item.nilai }}
+                            {{ item.nilai.angka }}
                         </div>
                         <div v-else 
                              class="px-3 py-1 rounded-full bg-neutral-100 border border-neutral-200 text-neutral-500 text-[10px] font-medium uppercase tracking-wide">

@@ -104,7 +104,7 @@ function unsubmit() {
                         class="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-100 px-4 py-2 text-sm font-bold text-emerald-700"
                     >
                         <MaterialSymbolsCheckCircle class="text-xl" />
-                        Nilai: {{ submission.nilai }} / 100
+                        Nilai: {{ submission.nilai.angka }} / 100
                     </div>
                     <div
                         v-else-if="isSubmitted"
@@ -167,7 +167,7 @@ function unsubmit() {
                         <div
                             class="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-2xl font-bold text-emerald-600"
                         >
-                            {{ submission.nilai }}
+                            {{ submission.nilai.angka }}
                         </div>
                         <h4 class="font-bold text-neutral-800">Tugas Selesai Dinilai</h4>
                         <p class="mt-1 text-sm text-neutral-500">"{{ submission.feedback || 'Kerja bagus, pertahankan!' }}"</p>

@@ -22,7 +22,12 @@ class JawabanTugas extends Model
     {
         return $this->belongsTo(User::class, 'answered_by_id');
     }
-    public function tugas(){
+    public function tugas()
+    {
         return $this->belongsTo(Tugas::class);
+    }
+    public function nilai()
+    {
+        return $this->hasOne(Nilai::class, 'jawaban_id', 'jawabanID');
     }
 }

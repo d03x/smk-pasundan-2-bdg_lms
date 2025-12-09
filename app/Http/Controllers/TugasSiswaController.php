@@ -12,9 +12,9 @@ class TugasSiswaController extends Controller
 {
     public function batalkanPengumpulan(Request $request, string $id)
     {
-        $jawaban = JawabanTugas::where('jawabanID', $id) 
+        $jawaban = JawabanTugas::where('jawabanID', $id)
             ->where('answered_by_id', $request->user()->id)
-            ->with('tugas') 
+            ->with('tugas')
             ->firstOrFail();
 
         if ($jawaban->nilai !== null) {
@@ -76,7 +76,7 @@ class TugasSiswaController extends Controller
         if (!$isAssigned) {
             abort(403, 'Maaf, tugas ini tidak ditugaskan kepada Anda atau kelas Anda.');
         }
-        $submission = JawabanTugas::where('tugas_id', $id)
+        $submission = JawabanTugas::with(['nilai'])->where('tugas_id', $id)
             ->where('answered_by_id', $user->id)
             ->first();
 
@@ -89,7 +89,7 @@ class TugasSiswaController extends Controller
     {
         $userId  = $request->user()->id;
         $kelasId = $request->kelas['id'];
-        $tugas = Tugas::query()
+        $tugas = Tugas::query()->with('nilais')
             ->with(['user', 'matpel'])
             ->where(function ($q) use ($userId) {
                 $q->where('receiver_type', 'siswa_id')
@@ -101,10 +101,14 @@ class TugasSiswaController extends Controller
             })
             ->get();
 
-        $jawaban = JawabanTugas::where('answered_by_id', $userId)
+        $jawaban = JawabanTugas::with('nilai')->where('answered_by_id', $userId)
             ->get()
             ->keyBy('tugas_id'); // supaya ceknya cepat
-        $tugas = $tugas->map(function ($item) use ($jawaban) {
+        $tugas = $tugas->map(function ($item) use ($jawaban, $userId) {
+            $nilai = collect($item->nilais)->where('siswa_id', '=', $userId)->where('tugas_id', '=', $item->tugasID)->first();
+            if ($nilai) {
+               $item->nilai_siswa = $nilai->angka;
+            }
             $item->is_dikerjakan = $jawaban->has($item->tugasID);
             $item->is_deadline_over = now()->greaterThan(SupportCarbon::parse($item->deadline));
 

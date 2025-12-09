@@ -199,18 +199,25 @@ class TugasController extends Controller
             ];
         });
     }
-    public function periksaTugas(Request $request, string $id = null)
+    public function periksaTugas(Request $request, string|null $id = null)
     {
 
         $jawaban = JawabanTugas::query()
+            ->with('nilai') // Load relasi nilai
             ->select([
-                'jawaban_tugas.jawabanID as jawaban_id',
+                // PENTING: Primary Key asli harus ikut di-select agar relasi 'with' jalan
+                'jawaban_tugas.jawabanID',
+
+                // Kolom lain
+                'jawaban_tugas.jawabanID as jawaban_id', // Alias tetap boleh ada
                 'jawaban_tugas.file_url',
                 'jawaban_tugas.created_at',
+                'jawaban_tugas.tugas_id',
+                'jawaban_tugas.answered_by_id', // Sebaiknya foreign key juga dibawa
 
+                // Data Join
                 'users.id as user_id',
                 'users.name as user_name',
-
                 'siswas.nis',
                 'kelas.nama as kelas_nama',
             ])
@@ -219,6 +226,8 @@ class TugasController extends Controller
             ->join('kelas', 'kelas.id', '=', 'siswas.kelas_id')
             ->where('jawaban_tugas.tugas_id', $id)
             ->get();
+
+        // dd($jawaban); // Cek lagi, harusnya nilai tidak null jika datanya ada
 
         return inertia('guru/tugas/periksa-tugas', [
             'jawaban' => $jawaban,
@@ -273,24 +282,30 @@ class TugasController extends Controller
     }
     public function deleteTugas(Request $request, string $id)
     {
-        $guru_id = $request->user()->id;
+        try {
+            $guru_id = $request->user()->id;
 
-        $tugas = Tugas::where('tugasID', $id)
-            ->where('created_by_user_id', $guru_id)
-            ->first();
+            $tugas = Tugas::where('tugasID', $id)
+                ->where('created_by_user_id', $guru_id)
+                ->first();
 
-        if (! $tugas) {
+            if (! $tugas) {
+                return redirect()->back()->withErrors([
+                    'gagal' => "Opps tugas gagal dihapus!",
+                ]);
+            };
+            if (!$tugas->delete()) {
+                return redirect()->back()->withErrors([
+                    'gagal' => "Opps tugas gagal dihapus!",
+                ]);
+            }
             return redirect()->back()->withErrors([
-                'gagal' => "Opps tugas gagal dihapus!",
+                'success' => "Opps tugas berhasil dihapus!",
             ]);
-        };
-        if (!$tugas->delete()) {
+        } catch (\Throwable $th) {
             return redirect()->back()->withErrors([
-                'gagal' => "Opps tugas gagal dihapus!",
+                'error' => "Opps tugas gagal dihapus!",
             ]);
         }
-        return redirect()->back()->withErrors([
-            'success' => "Opps tugas berhasil dihapus!",
-        ]);
     }
 }

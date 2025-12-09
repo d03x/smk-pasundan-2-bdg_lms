@@ -101,7 +101,6 @@ const getDeadlineStatus = (deadline: string, isOver: boolean, isDone: boolean) =
                         </p>
                     </div>
                 </div>
-
                 <div class="mt-4">
                     <Link
                         v-if="!item.is_deadline_over && !item.is_dikerjakan"
@@ -113,10 +112,9 @@ const getDeadlineStatus = (deadline: string, isOver: boolean, isDone: boolean) =
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                         </svg>
                     </Link>
-
                     <Link
                         v-else-if="item.is_dikerjakan"
-                        :href="`/siswa/tugas/${item.id}`"
+                        :href="kerjakan({ id: item.tugasID })"
                         class="flex w-full items-center justify-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm font-semibold text-emerald-700 transition-all hover:bg-emerald-100"
                     >
                         Lihat Nilai & Review

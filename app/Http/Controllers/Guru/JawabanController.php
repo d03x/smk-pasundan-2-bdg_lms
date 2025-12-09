@@ -13,10 +13,11 @@ class JawabanController extends Controller
      */
     public function __invoke(Request $request, string $id, string $jawaban_id)
     {
-        $data = JawabanTugas::select(
+        $data = JawabanTugas::with('nilai')->select(
             'jawaban_tugas.jawabanID',
             'jawaban_tugas.jawaban',
             'jawaban_tugas.file_url',
+            'jawaban_tugas.tugas_id',
             'jawaban_tugas.created_at',
             'matpels.nama as nama_matpel',
             'users.id as user_id',

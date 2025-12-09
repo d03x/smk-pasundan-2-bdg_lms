@@ -96,4 +96,8 @@ class User extends Authenticatable
     {
         return $this->fcm_token;
     }
+    public function nilais()
+    {
+        return $this->hasMany(Nilai::class, 'siswa_id', 'id');
+    }
 }
