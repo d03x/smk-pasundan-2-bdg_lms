@@ -22,11 +22,22 @@ class Tugas extends Model
     ];
     /** @use HasFactory<\Database\Factories\TugasFactory> */
     use HasFactory, HasUuids;
-
+    public function matpel()
+    {
+        return $this->belongsTo(Matpel::class);
+    }
     public function casts()
     {
         return [
             'receiver_type_id' => "array"
         ];
+    }
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'created_by_user_id');
+    }
+    public function jawaban()
+    {
+        return $this->hasMany(JawabanTugas::class, 'tugas_id');
     }
 }

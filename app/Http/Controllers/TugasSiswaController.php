@@ -2,12 +2,117 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\JawabanTugas;
+use App\Models\Tugas;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon as SupportCarbon;
+use Illuminate\Support\Facades\Storage;
 
 class TugasSiswaController extends Controller
 {
-    public function __invoke()
+    public function batalkanPengumpulan(Request $request, string $id)
     {
-        return inertia('siswa/tugas');
+        $jawaban = JawabanTugas::where('jawabanID', $id) 
+            ->where('answered_by_id', $request->user()->id)
+            ->with('tugas') 
+            ->firstOrFail();
+
+        if ($jawaban->nilai !== null) {
+            return back()->with('error', 'Tugas sudah dinilai guru, tidak bisa dibatalkan.');
+        }
+        if ($jawaban->tugas && now()->greaterThan($jawaban->tugas->deadline)) {
+            return back()->with('error', 'Batas waktu pengumpulan telah berakhir.');
+        }
+        if ($jawaban->file && Storage::disk('public')->exists($jawaban->file)) {
+            Storage::disk('public')->delete($jawaban->file);
+        }
+        $jawaban->delete();
+        return back()->with('success', 'Pengumpulan tugas berhasil dibatalkan. Silakan upload ulang.');
+    }
+    public function kerjakanSimpan(Request $request)
+    {
+        $request->validate([
+            'tugas_id' => 'required|exists:tugas,tugasID',
+            'jawaban_text' => 'nullable|string',
+            'file' => 'nullable|file|max:10240',
+        ]);
+
+        $path = null;
+        $fileUrl = null;
+
+        if ($request->hasFile('file')) {
+            $path = $request->file('file')->store('jawaban-tugas', 'public');
+
+            $fileUrl = asset('storage/' . $path);
+        }
+        JawabanTugas::updateOrCreate(
+            [
+                'tugas_id' => $request->tugas_id,
+                'answered_by_id' => $request->user()->id,
+            ],
+            [
+                'jawaban' => $request->jawaban_text,
+                'file' => $path,
+                'file_url' => $fileUrl
+            ]
+        );
+    }
+    public function kerjakan(Request $request, string $id)
+    {
+        $user = $request->user();
+        $siswa = $user->siswa;
+        $tugas = Tugas::with(['user', 'matpel'])->findOrFail($id);
+        $isAssigned = false;
+        $receivers = $tugas->receiver_type_id ?? [];
+        if ($tugas->receiver_type === 'class_id') {
+            if ($siswa && in_array($siswa->kelas_id, $receivers)) {
+                $isAssigned = true;
+            }
+        } elseif ($tugas->receiver_type === 'siswa_id') {
+            if (in_array($user->id, $receivers)) {
+                $isAssigned = true;
+            }
+        }
+        if (!$isAssigned) {
+            abort(403, 'Maaf, tugas ini tidak ditugaskan kepada Anda atau kelas Anda.');
+        }
+        $submission = JawabanTugas::where('tugas_id', $id)
+            ->where('answered_by_id', $user->id)
+            ->first();
+
+        return inertia('siswa/tugas/kerjakan', [
+            'tugas' => $tugas,
+            'submission' => $submission,
+        ]);
+    }
+    public function showTugas(Request $request)
+    {
+        $userId  = $request->user()->id;
+        $kelasId = $request->kelas['id'];
+        $tugas = Tugas::query()
+            ->with(['user', 'matpel'])
+            ->where(function ($q) use ($userId) {
+                $q->where('receiver_type', 'siswa_id')
+                    ->whereJsonContains('receiver_type_id', $userId);
+            })
+            ->orWhere(function ($q) use ($kelasId) {
+                $q->where('receiver_type', 'class_id')
+                    ->whereJsonContains('receiver_type_id', $kelasId);
+            })
+            ->get();
+
+        $jawaban = JawabanTugas::where('answered_by_id', $userId)
+            ->get()
+            ->keyBy('tugas_id'); // supaya ceknya cepat
+        $tugas = $tugas->map(function ($item) use ($jawaban) {
+            $item->is_dikerjakan = $jawaban->has($item->tugasID);
+            $item->is_deadline_over = now()->greaterThan(SupportCarbon::parse($item->deadline));
+
+            return $item;
+        });
+        return inertia('siswa/tugas', [
+            'tugas' => $tugas->values(),
+            'kelas' => $request->kelas,
+        ]);
     }
 }

@@ -11,9 +11,18 @@ class JawabanTugas extends Model
     /** @use HasFactory<\Database\Factories\JawabanTugasFactory> */
     protected $primaryKey = 'jawabanID';
     use HasFactory, HasUuids;
-
+    protected $fillable = [
+        'tugas_id',
+        'answered_by_id',
+        'jawaban',
+        'file',
+        'file_url',
+    ];
     public function user()
     {
         return $this->belongsTo(User::class, 'answered_by_id');
+    }
+    public function tugas(){
+        return $this->belongsTo(Tugas::class);
     }
 }

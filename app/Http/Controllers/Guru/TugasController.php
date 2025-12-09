@@ -7,6 +7,7 @@ use App\Models\JawabanTugas;
 use App\Models\Kelas;
 use App\Models\Siswa;
 use App\Models\Tugas;
+use App\Models\User;
 use App\Service\Contract\KelasServiceInterface;
 use App\Service\Contract\MatpelServiceInterface;
 use Illuminate\Http\Request;
@@ -40,35 +41,85 @@ class TugasController extends Controller
 
     public function index(Request $request, string $kelas_id, MatpelServiceInterface $matpelService)
     {
-        $guru = $request->user()->id;
-        $tugas = Tugas::where('created_by_user_id', $guru)
+        $guruId = $request->user()->id;
+        $tugas = Tugas::query()
+            ->where('created_by_user_id', $guruId)
             ->join('matpels', 'matpels.kode', '=', 'tugas.matpel_kode')
             ->select(['tugas.*', 'matpels.nama as nama_matpel'])
             ->when($request->keywords, function ($q) use ($request) {
-                $q->where('tugas.title', 'LIKE', "%{$request->keywords}%")
-                    ->orWhere('matpels.nama', 'LIKE', "%{$request->keywords}%");
+                $keywords = "%{$request->keywords}%";
+                $q->where(function ($q) use ($keywords) {
+                    $q->where('tugas.title', 'LIKE', $keywords)
+                        ->orWhere('matpels.nama', 'LIKE', $keywords);
+                });
             })
             ->get();
-        $tug = $tugas->filter(function ($item) use ($kelas_id) {
-            if ($item->receiver_type === 'class_id') {
-                return collect($item->receiver_type_id)->contains($kelas_id);
+
+        $filtered = $tugas->filter(
+            fn($item) =>
+            $item->receiver_type !== 'class_id' ||
+                collect($item->receiver_type_id)->contains($kelas_id)
+        );
+
+        $jawabanTugas = JawabanTugas::whereIn('tugas_id', $filtered->pluck('tugasID'))
+            ->get()
+            ->groupBy('tugas_id');
+
+        $result = $filtered->map(function ($item) use ($jawabanTugas) {
+            $receiverUserList = [];
+            $persentase = [];
+            if ($item->receiver_type === "siswa_id") {
+                $targetUserIds = $item->receiver_type_id;
+                $jawaban = $jawabanTugas->get($item->tugasID, collect());
+                $jumlahSubmit = $jawaban->whereIn('answered_by_id', $targetUserIds)->count();
+                $total = count($targetUserIds);
+
+                $persentase = [
+                    'jumlah_submit' => $jumlahSubmit,
+                    'total_siswa'   => $total,
+                    'persen_submit' => $total > 0 ? round(($jumlahSubmit / $total) * 100, 2) : 0
+                ];
+
+                $users = User::whereIn('id', $targetUserIds)
+                    ->with(['siswa.kelas'])
+                    ->get();
+
+                $receiverUserList = $users->map(function ($u) use ($jawaban) {
+                    $isDikerjakan = $jawaban->where('answered_by_id', $u->id)->first();
+
+                    return [
+                        'dikerjakan' => $isDikerjakan !== null,
+                        'id'         => $u->id,
+                        'name'       => $u->name,
+                        'kelas'      => $u->siswa?->kelas?->nama ?? '-',
+                    ];
+                });
             }
-            return true;
+
+            return array_merge(
+                $item->toArray(),
+                $persentase,
+                ['receiver_users' => $receiverUserList]
+            );
         });
 
-        $info_kelas = Kelas::find($kelas_id);
+        // --- 5. Data tambahan ---
+        $infoKelas = Kelas::find($kelas_id);
         $matpel = $matpelService->getMatpelByKelasAndGuru($kelas_id, $request->role_id);
+
+        // --- 6. Return inertia ---
         return inertia('guru/tugas', [
-            'info_kelas' => $info_kelas,
+            'info_kelas' => $infoKelas,
             'search_current_terms' => [
                 'keywords' => $request->keywords,
                 'matpels' => $request->kode_matpel,
             ],
-            'tugas' => $tug->values(),
+            'tugas' => $result->values(),
             'kelas_id' => $kelas_id,
             'matpels' => $matpel,
         ]);
     }
+
     public function __invoke(
         Request $request,
         KelasServiceInterface $kelasService
@@ -134,10 +185,12 @@ class TugasController extends Controller
                 });
             })
             ->get();
+
         return $data->map(function ($item) {
             return [
                 'nis' => $item->nis,
                 'user' => [
+                    'id' => $item->user->id,
                     'name' => $item->user ? $item->user->name : 'Tanpa Nama',
                 ],
                 'kelas' => [

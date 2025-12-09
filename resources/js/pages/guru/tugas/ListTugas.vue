@@ -102,10 +102,10 @@ function routeToDeleteTugas(id: string) {
     </div>
 
     <div class="space-y-4">
-
         <template v-if="$page.props.tugas.length > 0">
             <TugasItem v-for="i in $page.props.tugas" :key="i.tugasID" :item="i">
                 <template #buttons="item">
+                    
                     <div
                         class="flex items-center gap-2 mt-4 sm:mt-0 w-full sm:w-auto border-t sm:border-0 pt-3 sm:pt-0 border-neutral-100">
 

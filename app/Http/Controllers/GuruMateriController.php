@@ -146,7 +146,7 @@ class GuruMateriController extends Controller
                 'success' => "Materil berhasil di tambahkan"
             ]);
         }
-        
+
         return redirect()->back()->withErrors([
             'gagal' => "Materil berhasil di tambahkan"
         ]);
