@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Helpers\EmailGenerator;
 use App\Http\Controllers\Controller;
 use App\Models\Kelas;
+use App\Models\Matpel;
+use App\Models\Pengajaran;
 use App\Models\Siswa;
 use App\Models\User;
 use Carbon\Carbon;
@@ -13,6 +15,9 @@ use Illuminate\Support\Facades\DB;
 
 class UserManagementController extends Controller
 {
+    public function tambahGuru(){
+        return inertia('admin/user-management/guru/tambah');
+    }
     public function index()
     {
         return inertia('admin/user-management/index');
@@ -76,7 +81,41 @@ class UserManagementController extends Controller
     }
     public function guru()
     {
-        $user = User::whereHas('guru')->paginate(5);
-        return inertia('admin/user-management/siswa', ['users' => $user]);
+        $user = User::query()->whereHas('guru')
+            ->with(['guru.matpels', 'guru.pengajarans.kelas', 'guru.pengajarans.matpel'])
+            ->paginate(4);
+        $kelas = Kelas::all();
+        $matpels = Matpel::all();
+        return inertia('admin/user-management/guru/index', ['users' => $user, 'kelas' => $kelas, 'matpels' => $matpels]);
+    }
+    public function addMatpelToGuru(Request $request)
+    {
+        // 1. Validasi Input Basic
+        $request->validate([
+            'guru_nip'    => 'required|exists:gurus,nip',
+            'matpel_kode' => 'required|exists:matpels,kode',
+            'kelas_id'    => 'required|exists:kelas,id',
+        ]);
+        $existing = Pengajaran::with(['guru.user']) 
+            ->where('matpel_kode', $request->matpel_kode)
+            ->where('kelas_id', $request->kelas_id)
+            ->first();
+        if ($existing) {
+            if ($existing->guru_nip == $request->guru_nip) {
+                return back()->withErrors([
+                    'message' => 'Guru ini sudah terdaftar mengajar mata pelajaran tersebut di kelas ini.'
+                ]);
+            }
+            $namaGuruLain = $existing->guru->user->nama ?? $existing->guru->nama ?? 'Guru Lain';
+            return back()->withErrors([
+                'message' => "Gagal! Mata pelajaran ini di kelas tersebut sudah diampu oleh guru: {$namaGuruLain}."
+            ]);
+        }
+        Pengajaran::create([
+            'guru_nip'    => $request->guru_nip,
+            'matpel_kode' => $request->matpel_kode,
+            'kelas_id'    => $request->kelas_id,
+        ]);
+        return back()->with('success', 'Penugasan berhasil ditambahkan.');
     }
 }

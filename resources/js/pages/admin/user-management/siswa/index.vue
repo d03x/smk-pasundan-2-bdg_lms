@@ -6,6 +6,7 @@ import { getInitials } from '@/lib/utils';
 import { Link, usePage } from '@inertiajs/vue3';
 import { MoreVertical, Pencil, Plus, Search, Trash2 } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
+//@ts-ignore
 import Avatar from 'vue3-avatar';
 import Paging from '../paging.vue';
 const page = usePage().props as any;

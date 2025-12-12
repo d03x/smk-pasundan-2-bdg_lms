@@ -8,7 +8,7 @@
 
             <!-- hanya avatar di header -->
             <button @click="toggleProfile" class="relative z-50">
-                <Avatar :avatar_uri="$page.props.auth.user.siswa.pas_photo" :fallback="$page.props.auth.user.name" />
+                <Avatar :avatar_uri="($page.props.auth.user.siswa as any)?.pas_photo" :fallback="$page.props.auth.user.name" />
             </button>
         </div>
     </header>

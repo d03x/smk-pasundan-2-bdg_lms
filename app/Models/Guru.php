@@ -24,4 +24,21 @@ class Guru extends Model
     {
         return $this->belongsTo(User::class, 'user_id', 'id');
     }
+    public function matpels()
+    {
+        // PENTING: Ganti 'nama_tabel_pivot' dengan nama tabel dari migrasi kamu
+        // (biasanya nama tabelnya: 'guru_matpel', 'jadwal_pelajarans', atau 'pengajars')
+        return $this->belongsToMany(
+            Matpel::class,           // Model Tujuan
+            'pengajarans',      // Nama Tabel Pivot (tabel di migrasi kamu)
+            'guru_nip',              // Foreign Key di tabel pivot untuk model ini (Guru)
+            'matpel_kode',           // Foreign Key di tabel pivot untuk model lawan (Matpel)
+            'nip',                   // Primary Key lokal (Guru)
+            'kode'                   // Primary Key lawan (Matpel)
+        )->withPivot('kelas_id');    // Opsional: Jika ingin mengambil data kelas_id juga
+    }
+    public function pengajarans()
+    {
+        return $this->hasMany(Pengajaran::class, 'guru_nip', 'nip');
+    }
 }

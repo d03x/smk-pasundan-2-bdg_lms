@@ -9,7 +9,7 @@ const breadcrumbs = [{ label: 'Dashboard' }, { label: 'User Management' }];
 const menuCards = [
     {
         label: 'Guru',
-        href: UserManagementController.siswa().url,
+        href: UserManagementController.guru().url,
         icon: Contact,
         bgColor: 'bg-orange-500',
         hoverColor: 'hover:bg-orange-600',
