@@ -22,6 +22,7 @@ class Siswa extends Model
         'tingkat',
         'pas_photo',
         'status',
+        'kelas_id',
     ];
     public function user()
     {

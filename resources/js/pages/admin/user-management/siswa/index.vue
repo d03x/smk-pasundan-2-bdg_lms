@@ -1,33 +1,30 @@
 <script lang="ts" setup>
 // ... imports yang sudah ada
+import UserManagementController from '@/actions/App/Http/Controllers/Admin/UserManagementController';
 import Breadcrumb from '@/features/dashboard-admin/breadcrumb.vue';
-import { usePage } from '@inertiajs/vue3';
+import { getInitials } from '@/lib/utils';
+import { Link, usePage } from '@inertiajs/vue3';
 import { MoreVertical, Pencil, Plus, Search, Trash2 } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
+import Avatar from 'vue3-avatar';
 import Paging from '../paging.vue';
-import { getInitials } from '@/lib/utils';
-
 const page = usePage().props as any;
-
 const userList = computed(() => {
     return page.users?.data || [];
 });
-
 const links = computed(() => {
     return page.users?.links || [];
 });
-
-
 const breadcrumbs = [{ label: 'Dashboard' }, { label: 'User Management' }];
 
 const search = ref('');
 </script>
 
 <template>
-    <div class="w-full  pb-10">
+    <div class="w-full pb-10">
         <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <Breadcrumb :items="breadcrumbs" />
-            <div class="flex px-4 flex-col gap-3 sm:flex-row">
+            <div class="flex flex-col gap-3 px-4 sm:flex-row">
                 <div class="relative">
                     <Search class="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
                     <input
@@ -39,7 +36,7 @@ const search = ref('');
                 </div>
 
                 <Link
-                    href="/users/create"
+                    :href="UserManagementController.tambahSiswa()"
                     class="flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700"
                 >
                     <Plus class="h-4 w-4" />
@@ -48,8 +45,8 @@ const search = ref('');
             </div>
         </div>
 
-        <div class="hidden mx-4 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm md:block">
-            <table class="w-full  text-left text-sm text-gray-500">
+        <div class="mx-4 hidden overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm md:block">
+            <table class="w-full text-left text-sm text-gray-500">
                 <thead class="bg-gray-50 text-xs text-gray-700 uppercase">
                     <tr>
                         <th class="px-6 py-4 font-semibold">Nama Siswa</th>
@@ -64,7 +61,7 @@ const search = ref('');
                         <td class="px-6 py-4">
                             <div class="flex items-center gap-3">
                                 <div class="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-700">
-                                    {{ getInitials(user.name) }}
+                                    <Avatar :name="user.name" alt="" />
                                 </div>
                                 <div class="font-medium text-gray-900">{{ user.name }}</div>
                             </div>
