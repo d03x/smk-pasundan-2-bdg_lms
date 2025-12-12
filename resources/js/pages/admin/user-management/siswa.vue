@@ -6,10 +6,8 @@ import { MoreVertical, Pencil, Plus, Search, Trash2 } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 import Paging from './paging.vue';
 
-const page = usePage().props;
+const page = usePage().props as any;
 
-// Asumsi struktur data dari Laravel Pagination (LengthAwarePaginator)
-// Jika data Anda langsung array, ubah jadi: return page.users || [];
 const userList = computed(() => {
     return page.users?.data || [];
 });
@@ -18,7 +16,6 @@ const links = computed(() => {
     return page.users?.links || [];
 });
 
-// Helper untuk Inisial Nama (seperti diskusi sebelumnya)
 const getInitials = (name: string) => {
     return name
         ? name

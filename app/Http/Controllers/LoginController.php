@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Dto\LoginRequestDto;
 use App\Service\Contract\AuthServiceInterface;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class LoginController extends Controller
 {
@@ -25,8 +26,8 @@ class LoginController extends Controller
         $user->fromRequest($request);
         return $authService->validateLogin($user);
     }
-    public function logout(){
-        auth()->logout();
+    public function logout(Request $request){
+        Auth::logout(); 
         return to_route('login');
     }
 }
