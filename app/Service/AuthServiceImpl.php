@@ -13,6 +13,10 @@ class AuthServiceImpl implements AuthServiceInterface
     public function validateLogin(LoginRequestDto $data)
     {
         if (Auth::attempt($data->toArray(), true)) {
+            $user = Auth::user();
+            if($user->is_admin){
+                return to_route('admin.index');
+            }
             return to_route('home');
         }
         throw ValidationException::withMessages([

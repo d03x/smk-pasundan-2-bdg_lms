@@ -50,8 +50,8 @@
 import Avatar from '@/components/avatar.vue';
 import Logo from './logo.vue';
 import AppMenu from './menu/app-menu.vue';
-import { Link, router } from '@inertiajs/vue3';
-import { ref, watch } from 'vue';
+import { Link, router, usePage } from '@inertiajs/vue3';
+import { computed, ref, watch } from 'vue';
 import { motion, AnimatePresence } from 'motion-v';
 import { onClickOutside } from "@vueuse/core";
 

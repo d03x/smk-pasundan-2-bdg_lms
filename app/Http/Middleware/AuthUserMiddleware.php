@@ -29,11 +29,14 @@ class AuthUserMiddleware
                 ]);
             }
         }
-        if ( $user->guru ){
+        if ($user->guru) {
             $getID = $user->guru->nip;
-        }else if($user->siswa){
+        } else if ($user->siswa) {
             $getID = $user->siswa->nis;
+        } else if ($user->is_admin) {
+            $getID = $user->id;
         }
+        
         $request->merge([
             'role' => $user->role,
             'role_id' => $getID,

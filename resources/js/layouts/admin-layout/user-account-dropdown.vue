@@ -1,17 +1,18 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { onClickOutside } from '@vueuse/core';
-import { Link } from '@inertiajs/vue3'; // Sesuaikan dengan router Anda (misal vue-router)
-import { 
-    User, 
-    Settings, 
-    LogOut, 
-    ChevronDown 
+import { Link, usePage } from '@inertiajs/vue3'; // Sesuaikan dengan router Anda (misal vue-router)
+import {
+    User,
+    Settings,
+    LogOut,
+    ChevronDown
 } from 'lucide-vue-next';
 import Avatar from '@/components/avatar.vue';
+import { logout } from '@/actions/App/Http/Controllers/LoginController';
 
 const isDropdownOpen = ref(false);
-const dropdownRef = ref(null); 
+const dropdownRef = ref(null);
 
 onClickOutside(dropdownRef, () => {
     isDropdownOpen.value = false;
@@ -21,30 +22,30 @@ const toggleDropdown = () => {
     isDropdownOpen.value = !isDropdownOpen.value;
 };
 
-const user = {
-    name: 'Dimas Adtya',
-    email: 'dimas@example.com',
-    initial: 'D'
-};
+
+const page = usePage()
+const user = computed(()=>{
+    const data = page.props.auth.user;
+    return {
+        ...data,
+        initial :data.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase(),
+    };
+})
 </script>
 
 <template>
     <div class="ml-auto" ref="dropdownRef">
         <div class="relative">
-            <button 
+            <button
                 @click="toggleDropdown"
-                class="flex items-center gap-2 rounded-full bg-white pl-1 pr-2 py-1 border border-transparent hover:border-gray-200 hover:bg-gray-50 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-100 group"
-                :class="{ 'bg-gray-50 border-gray-200': isDropdownOpen }"
+                class="group flex items-center gap-2 rounded-full border border-transparent bg-white py-1 pr-2 pl-1 transition-all hover:border-gray-200 hover:bg-gray-50 focus:ring-2 focus:ring-indigo-100 focus:outline-none"
+                :class="{ 'border-gray-200 bg-gray-50': isDropdownOpen }"
             >
                 <Avatar :fallback="user.initial" class="h-8 w-8 transition-transform group-hover:scale-105" />
-                
-                <span class="hidden md:block text-sm font-medium text-gray-700">{{ user.name }}</span>
 
-                <ChevronDown 
-                    :size="16" 
-                    class="text-gray-400 transition-transform duration-300"
-                    :class="{ 'rotate-180': isDropdownOpen }"
-                />
+                <span class="hidden text-sm font-medium text-gray-700 md:block">{{ user.name }}</span>
+
+                <ChevronDown :size="16" class="text-gray-400 transition-transform duration-300" :class="{ 'rotate-180': isDropdownOpen }" />
             </button>
 
             <Transition
@@ -55,21 +56,27 @@ const user = {
                 leave-from-class="transform opacity-100 scale-100 translate-y-0"
                 leave-to-class="transform opacity-0 scale-95 -translate-y-2"
             >
-                <div 
+                <div
                     v-show="isDropdownOpen"
-                    class="absolute right-0 mt-2 w-64 origin-top-right rounded-xl bg-white p-2 shadow-xl ring-1 ring-black/5 focus:outline-none z-50"
+                    class="absolute right-0 z-50 mt-2 w-64 origin-top-right rounded-xl bg-white p-2 shadow-xl ring-1 ring-black/5 focus:outline-none"
                 >
-                    <div class="px-3 py-3 border-b border-gray-100 mb-1">
+                    <div class="mb-1 border-b border-gray-100 px-3 py-3">
                         <p class="text-sm font-semibold text-gray-900">{{ user.name }}</p>
-                        <p class="text-xs text-gray-500 truncate">{{ user.email }}</p>
+                        <p class="truncate text-xs text-gray-500">{{ user.email }}</p>
                     </div>
 
                     <div class="py-1">
-                        <Link href="/profile" class="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-700 rounded-lg hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
+                        <Link
+                            href="/profile"
+                            class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-700 transition-colors hover:bg-indigo-50 hover:text-indigo-600"
+                        >
                             <User :size="18" />
                             Profile Saya
                         </Link>
-                        <Link href="/settings" class="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-700 rounded-lg hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
+                        <Link
+                            href="/settings"
+                            class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-700 transition-colors hover:bg-indigo-50 hover:text-indigo-600"
+                        >
                             <Settings :size="18" />
                             Pengaturan Akun
                         </Link>
@@ -78,7 +85,12 @@ const user = {
                     <div class="my-1 h-px bg-gray-100"></div>
 
                     <div class="py-1">
-                        <Link href="/logout" method="post" as="button" class="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-red-600 rounded-lg hover:bg-red-50 transition-colors">
+                        <Link
+                            :href="logout()"
+                            method="post"
+                            as="button"
+                            class="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-red-600 transition-colors hover:bg-red-50"
+                        >
                             <LogOut :size="18" />
                             Keluar
                         </Link>

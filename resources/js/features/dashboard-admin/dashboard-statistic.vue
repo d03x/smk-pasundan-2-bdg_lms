@@ -2,45 +2,44 @@
 import FamiconsPeopleSharp from '@/icons/FamiconsPeopleSharp.vue';
 import IcBaselineClass from '@/icons/IcBaselineClass.vue';
 import PhChalkboardTeacher from '@/icons/PhChalkboardTeacher.vue';
-import { 
-    Contact, 
-    Users, 
-    BookMarked 
-} from 'lucide-vue-next';
+import { usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 
-// Data statistik tetap sama
+const page = usePage().props;
+
+const stat = computed(() => page.statistic as any);
 const stats = [
-    { 
-        label: 'Guru', 
-        status: 'Aktif', 
-        count: 70, 
-        icon: PhChalkboardTeacher, 
-        iconColor: 'text-orange-500' 
+    {
+        label: 'Guru',
+        status: 'Aktif',
+        count: stat.value.guru,
+        icon: PhChalkboardTeacher,
+        iconColor: 'text-orange-500',
     },
-    { 
-        label: 'Siswa', 
-        status: 'Aktif', 
-        count: 1900, 
-        icon: FamiconsPeopleSharp, 
-        iconColor: 'text-green-600' 
+    {
+        label: 'Siswa',
+        status: 'Aktif',
+        count: stat.value.siswa,
+        icon: FamiconsPeopleSharp,
+        iconColor: 'text-green-600',
     },
-    { 
-        label: 'Kelas', 
-        status: 'Aktif', 
-        count: 45, 
-        icon: IcBaselineClass, 
-        iconColor: 'text-blue-600' 
+    {
+        label: 'Kelas',
+        status: 'Aktif',
+        count: stat.value.kelas,
+        icon: IcBaselineClass,
+        iconColor: 'text-blue-600',
     },
 ];
 </script>
 
 <template>
-    <div class="flex-1 px-4 mt-5">
+    <div class="mt-5 flex-1 px-4">
         <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <div 
-                v-for="(stat, index) in stats" 
+            <div
+                v-for="(stat, index) in stats"
                 :key="index"
-                class="rounded-xl bg-gray-50/80 p-5 shadow-sm hover:shadow-md transition-shadow duration-300"
+                class="rounded-xl bg-gray-50/80 p-5 shadow-sm transition-shadow duration-300 hover:shadow-md"
             >
                 <div class="mb-4 flex items-center gap-2">
                     <span class="text-base font-bold text-indigo-950">
@@ -54,13 +53,10 @@ const stats = [
 
                 <div class="flex items-center justify-between">
                     <div class="flex items-center justify-center">
-                        <component 
-                            :is="stat.icon" 
-                            :class="[stat.iconColor, 'h-[50px] w-[50px] stroke-[1.5]']" 
-                        />
+                        <component :is="stat.icon" :class="[stat.iconColor, 'h-[50px] w-[50px] stroke-[1.5]']" />
                     </div>
-                    
-                    <span class="text-3xl font-bold text-indigo-950 tracking-tight">
+
+                    <span class="text-3xl font-bold tracking-tight text-indigo-950">
                         {{ stat.count }}
                     </span>
                 </div>
