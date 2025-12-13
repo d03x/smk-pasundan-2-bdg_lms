@@ -1,10 +1,19 @@
 <?php
 
 use App\Http\Controllers\Admin\HomeController;
+use App\Http\Controllers\Admin\ManagementKelasController;
 use App\Http\Controllers\Admin\UserManagementController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('index');
+Route::prefix('kelas-management')->name('management-kelas.')->group(function(){
+    Route::get('', [ManagementKelasController::class,'index'])->name('index');
+    Route::post('', [ManagementKelasController::class, 'store'])->name('store'); // Simpan
+    Route::post('assign-class-to-student', [ManagementKelasController::class, 'storeSiswa'])->name('storeSiswa'); // Simpan
+    Route::post('remove-class-to-student', [ManagementKelasController::class, 'removeStudent'])->name('removeStudent'); // Simpan
+    Route::put('/{id}', [ManagementKelasController::class, 'update'])->name('update'); // Update
+    Route::delete('/{id}', [ManagementKelasController::class, 'destroy'])->name('destroy'); // Hapus
+});
 Route::prefix('user-management')->name('user-management.')->group(function () {
     Route::get('', [UserManagementController::class, 'index'])->name('index');
     Route::get('siswa', [UserManagementController::class, 'siswa'])->name('siswa');
@@ -21,4 +30,5 @@ Route::prefix('user-management')->name('user-management.')->group(function () {
     Route::post('guru-add-matpel', [UserManagementController::class, 'addMatpelToGuru'])->name('guru-add-matpel');
     Route::get('edit-guru/{id}', [UserManagementController::class, 'editGuru'])->name('editGuru');
     Route::post('edit-guru/{id}', [UserManagementController::class, 'updateGuru'])->name('updateGuru');
+
 });

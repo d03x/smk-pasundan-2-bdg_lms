@@ -5,6 +5,7 @@ import { BookOpen, FileText, LayoutDashboard, MonitorPlay, Users } from 'lucide-
 import SidebarMenu from './sidebar-menu.vue';
 import { usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
+import ManagementKelasController from '@/actions/App/Http/Controllers/Admin/ManagementKelasController';
 const page = usePage()
 // Contoh logika untuk menentukan menu aktif (biasanya pakai usePage().url di Inertia)
 const currentPath = computed(()=>page.url); 
@@ -14,7 +15,7 @@ const menus = [
     { label: 'Management User', href: UserManagementController.index().url, icon: Users },
     { label: 'Cetak Laporan', href: '/reports', icon: FileText },
     { label: 'Manajemen Akademik', href: '/academic', icon: BookOpen },
-    { label: 'Manajemen Kelas', href: '/classes', icon: MonitorPlay },
+    { label: 'Manajemen Kelas', href: ManagementKelasController.index().url, icon: MonitorPlay },
 ];
 </script>
 
