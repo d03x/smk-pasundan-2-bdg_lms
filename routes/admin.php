@@ -65,3 +65,4 @@ Route::resource('kelas-management', ManagementKelasController::class)->names('ma
 
 // Route Matpel
 Route::resource('matpel', MatpelController::class)->names('matpel');
+Route::post('matpel/import', [MatpelController::class, 'import'])->name('matpel.import');
