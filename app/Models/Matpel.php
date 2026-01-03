@@ -12,6 +12,7 @@ class Matpel extends Model
     protected $fillable = [
         'kode',
         'nama',
+        'kelompok',
         'kategori'
     ];
     protected $keyType = 'string';

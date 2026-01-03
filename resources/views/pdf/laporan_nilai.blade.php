@@ -142,7 +142,7 @@
             <tr>
                 <th width="5%">No</th>
                 <th width="25%">Nama Siswa</th>
-                <th width="30%">Tugas / Matpel</th>
+                <th width="30%">Tugas / Matpel / Kelas</th>
                 <th width="10%">Nilai</th>
                 <th>Komentar Guru</th>
             </tr>
@@ -162,6 +162,8 @@
                         {{ $nilai->tugas->title ?? ($nilai->tugas->nama ?? 'Tugas #' . $nilai->tugas_id) }}
                         /
                         {{ $nilai->tugas->matpel->nama }}
+                        /
+                        {{ $nilai->siswa->kelas['nama'] }}
                     </td>
                     <td class="text-center text-bold" style="font-size: 14px;">
                         <span class="{{ $nilai->angka < 75 ? 'nilai-jelek' : 'nilai-bagus' }}">

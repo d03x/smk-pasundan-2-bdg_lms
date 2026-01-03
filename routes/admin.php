@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\CetakLaporanController;
 use App\Http\Controllers\Admin\HomeController;
 use App\Http\Controllers\Admin\ManagementKelasController;
 use App\Http\Controllers\Admin\UserManagementController;
+use App\Http\Controllers\Admin\MatpelController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('index');
@@ -59,3 +60,8 @@ Route::prefix('akademik')->name('akademik.')->group(function () {
     Route::get('/akademik/plotting', [AkademikController::class, 'create'])->name('akademik.plotting');
     Route::post('/akademik/plotting', [AkademikController::class, 'store'])->name('akademik.plotting.store');
 });
+
+Route::resource('kelas-management', ManagementKelasController::class)->names('management-kelas');
+
+// Route Matpel
+Route::resource('matpel', MatpelController::class)->names('matpel');
