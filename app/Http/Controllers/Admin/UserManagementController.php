@@ -11,6 +11,7 @@ use App\Models\Pengajaran;
 use App\Models\Siswa;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -106,7 +107,10 @@ class UserManagementController extends Controller
     }
     public function tambahGuru()
     {
-        return inertia('admin/user-management/guru/tambah');
+        $matpels = \App\Models\Matpel::select('kode', 'nama')->orderBy('nama')->get();
+        return inertia('admin/user-management/guru/tambah', [
+            'matpels' => $matpels,
+        ]);
     }
     public function index()
     {
@@ -114,54 +118,57 @@ class UserManagementController extends Controller
     }
     public function simpanGuru(Request $request)
     {
-        // 1. Validasi Input
         $request->validate([
-            'nip'            => 'required|unique:gurus,nip|numeric', // NIP harus unik di tabel gurus
+            'nip'            => 'required|unique:gurus,nip|numeric',
             'name'           => 'required|string|max:255',
             'jenis_kelamin'  => 'required|in:L,P',
             'status'         => 'required',
-            'foto'           => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // name field di vue adalah 'foto'
+            'foto'           => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'gelar_depan'    => 'nullable|string|max:50',
             'gelar_belakang' => 'nullable|string|max:50',
+            'matpel_kode'    => 'nullable|exists:matpels,kode',
         ]);
 
         $user = DB::transaction(function () use ($request) {
 
+
             $emailGenerated = EmailGenerator::generateEmailDomain($request->nip);
-            $password = $request->nip . "-" . Carbon::now()->format("Y");
+            $passwordRaw = $request->nip . "-" . Carbon::now()->format("Y");
 
             $userData = [
                 'name'     => $request->name,
                 'email'    => $emailGenerated,
-                'password' => Hash::make($password), // Disarankan di-hash
+                'password' => Hash::make($passwordRaw),
             ];
 
             $user = User::create($userData);
 
             $photoPath = null;
             if ($request->hasFile('foto')) {
-                // Simpan ke storage public/guru-photos
                 $photoPath = $request->file('foto')->store('guru-photos', 'public');
             }
 
-            // Create Data Guru
             Guru::create([
                 'nip'            => $request->nip,
                 'user_id'        => $user->id,
                 'gelar_depan'    => $request->gelar_depan,
                 'gelar_belakang' => $request->gelar_belakang,
                 'jenis_kelamin'  => $request->jenis_kelamin,
-                'status'         => $request->status, // Aktif/Nonaktif
-                'foto'           => $photoPath,       // Sesuaikan nama kolom di DB (misal: pas_photo atau foto)
+                'status'         => strtolower($request->status), // Ubah ke huruf kecil (aktif/nonaktif) agar seragam
+                'foto'           => $photoPath,
+                'matpel_kode'    => $request->matpel_kode, // <--- INPUT DARI SELECT VUE
             ]);
 
-            return $user;
+            return $user; // Return object user untuk pengecekan di bawah
         });
 
         // 3. Return Response
         if ($user) {
+            // Tampilkan password default di notifikasi agar admin tahu
+            $passwordDefault = $request->nip . "-" . Carbon::now()->format("Y");
+
             return back()->with([
-                'success' => "Data Guru berhasil ditambahkan. Password default: " . $request->nip . "-" . Carbon::now()->format("Y")
+                'success' => "Data Guru berhasil ditambahkan. Password default: " . $passwordDefault
             ]);
         }
 
@@ -223,10 +230,11 @@ class UserManagementController extends Controller
             'nip'            => ['required', 'numeric', Rule::unique('gurus', 'nip')->ignore($guru->nip, 'nip')],
             'name'           => 'required|string|max:255',
             'jenis_kelamin'  => 'required|in:L,P',
-            'status'         => 'required|in:aktif,nonaktif',
-            'foto'           => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Foto bersifat opsional saat update
+            'status'         => 'required|in:aktif,nonaktif,Aktif,Nonaktif',
+            'foto'           => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'gelar_depan'    => 'nullable|string|max:50',
             'gelar_belakang' => 'nullable|string|max:50',
+            'matpel_kode'    => 'nullable|exists:matpels,kode',
         ]);
 
         DB::transaction(function () use ($request, $guru) {
@@ -235,7 +243,6 @@ class UserManagementController extends Controller
             ]);
 
             $photoPath = $guru->foto;
-
             if ($request->hasFile('foto')) {
                 if ($guru->foto && $guru->foto !== 'guru-default.png' && Storage::disk('public')->exists($guru->foto)) {
                     Storage::disk('public')->delete($guru->foto);
@@ -245,12 +252,12 @@ class UserManagementController extends Controller
 
             $guru->update([
                 'nip'            => $request->nip,
-                // 'user_id' tidak perlu diupdate
                 'gelar_depan'    => $request->gelar_depan,
                 'gelar_belakang' => $request->gelar_belakang,
                 'jenis_kelamin'  => $request->jenis_kelamin,
-                'status'         => $request->status,
+                'status'         => strtolower($request->status), // Pastikan tersimpan huruf kecil
                 'foto'           => $photoPath,
+                'matpel_kode'    => $request->matpel_kode,
             ]);
         });
 
@@ -261,9 +268,10 @@ class UserManagementController extends Controller
     public function editGuru(string $id)
     {
         $guru = Guru::with('user')->findOrFail($id);
-
+        $matpels = \App\Models\Matpel::select('kode', 'nama')->orderBy('nama')->get();
         return inertia('admin/user-management/guru/edit', [
-            'guru' => $guru
+            'guru' => $guru,
+            'matpels' => $matpels,
         ]);
     }
     public function siswa()
@@ -278,14 +286,40 @@ class UserManagementController extends Controller
         return inertia('admin/user-management/siswa/tambah', ['kelasList' => $kelas]);
     }
 
-    public function guru()
+    public function guru(Request $request)
     {
-        $user = User::query()->whereHas('guru')
-            ->with(['guru.matpels', 'guru.pengajarans.kelas', 'guru.pengajarans.matpel'])
-            ->paginate(4);
+        $query = User::query()->whereHas('guru');
+        if ($request->has('search') && $request->search != '') {
+            $search = $request->search;
+
+            $query->where(function (Builder $q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhereHas('guru', function (Builder $qGuru) use ($search) {
+                        $qGuru->where('nip', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        $users = $query->with([
+            'guru.matpels',
+            'guru.pengajarans.kelas',
+            'guru.spesialisMatpel',
+            'guru.pengajarans.matpel'
+        ])
+            ->latest()
+            ->paginate(4)
+            ->withQueryString();
+
         $kelas = Kelas::all();
         $matpels = Matpel::all();
-        return inertia('admin/user-management/guru/index', ['users' => $user, 'kelas' => $kelas, 'matpels' => $matpels]);
+
+        return inertia('admin/user-management/guru/index', [
+            'users'   => $users,
+            'kelas'   => $kelas,
+            'matpels' => $matpels,
+            'filters' => $request->only(['search']),
+        ]);
     }
     public function addMatpelToGuru(Request $request)
     {
@@ -316,5 +350,93 @@ class UserManagementController extends Controller
             'kelas_id'    => $request->kelas_id,
         ]);
         return back()->with('success', 'Penugasan berhasil ditambahkan.');
+    }
+
+    public function users(Request $request)
+    {
+        // Ambil user yang TIDAK punya relasi guru DAN TIDAK punya relasi siswa
+        $query = User::query()->doesntHave('guru')->doesntHave('siswa');
+
+        if ($request->has('search') && $request->search != '') {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        $users = $query->latest()->paginate(10)->withQueryString();
+
+        return inertia('admin/user-management/users/index', [
+            'users'   => $users,
+            'filters' => $request->only(['search']),
+        ]);
+    }
+
+    public function simpanUser(Request $request)
+    {
+        $request->validate([
+            'name'     => 'required|string|max:255',
+            'email'    => 'required|email|unique:users,email',
+            'password' => 'required|min:6',
+        ]);
+
+        User::create([
+            'name'     => $request->name,
+            'email'    => $request->email,
+            'password' => Hash::make($request->password),
+            // Jika ada kolom role, tambahkan di sini: 'role' => 'admin'
+        ]);
+
+        return back()->with('success', 'Admin/Staff berhasil ditambahkan.');
+    }
+
+    public function updateUser(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
+
+        $request->validate([
+            'name'  => 'required|string|max:255',
+            'email' => ['required', 'email', Rule::unique('users', 'email')->ignore($user->id)],
+        ]);
+
+        $data = [
+            'name'  => $request->name,
+            'email' => $request->email,
+        ];
+
+        // Update password hanya jika diisi
+        if ($request->filled('password')) {
+            $data['password'] = Hash::make($request->password);
+        }
+
+        $user->update($data);
+
+        return back()->with('success', 'Data Admin/Staff berhasil diperbarui.');
+    }
+    public function createUser()
+    {
+        return inertia('admin/user-management/users/tambah');
+    }
+    public function editUser($id)
+    {
+        $user = User::findOrFail($id);
+        return inertia('admin/user-management/users/edit', ['user' => $user]);
+    }
+    public function destroyUser($id)
+    {
+        $user = User::findOrFail($id);
+
+        if (auth()->id() == $user->id) {
+            return back()->with('error', 'Anda tidak dapat menghapus akun Anda sendiri saat sedang login.');
+        }
+
+        if ($user->guru || $user->siswa) {
+            return back()->with('error', 'User ini terhubung dengan data Guru/Siswa. Gunakan menu Guru/Siswa untuk menghapus.');
+        }
+
+        $user->delete();
+
+        return back()->with('success', 'Admin/Staff berhasil dihapus.');
     }
 }

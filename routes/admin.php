@@ -24,7 +24,14 @@ Route::prefix('user-management')->name('user-management.')->group(function () {
     Route::get('edit-siswa/{id}', [UserManagementController::class, 'editSiswa'])->name('edit-siswa');
     Route::post('edit-siswa/{id}', [UserManagementController::class, 'updateSiswa'])->name('update-siswa');
     Route::delete('delete-siswa/{id}', [UserManagementController::class, 'destroySiswa'])->name('udestroy-siswa');
+    ## USER
+    Route::get('create-user', [UserManagementController::class, 'createUser'])->name('createUser'); // List
+    Route::get('edit-user/{id}', [UserManagementController::class, 'editUser'])->name('editUser'); // List
 
+    Route::get('users', [UserManagementController::class, 'users'])->name('users'); // List
+    Route::post('users', [UserManagementController::class, 'simpanUser'])->name('simpanUser'); // Create
+    Route::put('users/{id}', [UserManagementController::class, 'updateUser'])->name('updateUser'); // Update
+    Route::delete('users/{id}', [UserManagementController::class, 'destroyUser'])->name('destroyUser'); // Delete
 
     #GURU
     Route::get('guru', [UserManagementController::class, 'guru'])->name('guru');

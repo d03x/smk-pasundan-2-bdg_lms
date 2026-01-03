@@ -2,7 +2,7 @@
 import UserManagementController from '@/actions/App/Http/Controllers/Admin/UserManagementController';
 import Breadcrumb from '@/features/dashboard-admin/breadcrumb.vue';
 import { Link } from '@inertiajs/vue3';
-import { Contact, Users } from 'lucide-vue-next';
+import { Contact, Users, ShieldCheck } from 'lucide-vue-next'; // Tambah icon ShieldCheck
 
 const breadcrumbs = [{ label: 'Dashboard' }, { label: 'User Management' }];
 
@@ -23,6 +23,15 @@ const menuCards = [
         hoverColor: 'hover:bg-green-600',
         shadowColor: 'shadow-green-200',
     },
+    // --- TAMBAHAN MENU ADMIN ---
+    {
+        label: 'Admin / Staff',
+        href: UserManagementController.users().url, // Pastikan route ini sesuai web.php
+        icon: ShieldCheck,
+        bgColor: 'bg-blue-500',
+        hoverColor: 'hover:bg-blue-600',
+        shadowColor: 'shadow-blue-200',
+    },
 ];
 </script>
 
@@ -32,7 +41,7 @@ const menuCards = [
     </div>
 
     <div class="w-full px-2 md:px-4">
-        <div class="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6">
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-6">
             <Link
                 v-for="(menu, index) in menuCards"
                 :key="index"
@@ -50,7 +59,7 @@ const menuCards = [
                     stroke-width="2.5"
                 />
 
-                <span class="z-10 text-2xl font-bold tracking-wide md:text-3xl">
+                <span class="z-10 text-xl font-bold tracking-wide md:text-2xl">
                     {{ menu.label }}
                 </span>
             </Link>

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Storage;
 
 class Guru extends Model
@@ -19,6 +20,7 @@ class Guru extends Model
         'foto',
         'status',
         'user_id',
+        'matpel_kode',
         'gelar_depan',
         'gelar_belakang',
     ];
@@ -27,27 +29,28 @@ class Guru extends Model
     {
         return $this->belongsTo(User::class, 'user_id', 'id');
     }
+    public function spesialisMatpel(): BelongsTo
+    {
+        return $this->belongsTo(Matpel::class, 'matpel_kode', 'kode');
+    }
     public function getFotoUrlAttribute()
     {
         if ($this->foto && Storage::disk('public')->exists($this->foto)) {
             return asset('storage/' . $this->foto);
         }
-        // Return gambar default jika tidak ada foto
-        // Pastikan Anda punya file ini di public/images/default-avatar.png
+
         return asset('images/default-avatar.png');
     }
     public function matpels()
     {
-        // PENTING: Ganti 'nama_tabel_pivot' dengan nama tabel dari migrasi kamu
-        // (biasanya nama tabelnya: 'guru_matpel', 'jadwal_pelajarans', atau 'pengajars')
         return $this->belongsToMany(
-            Matpel::class,           // Model Tujuan
-            'pengajarans',      // Nama Tabel Pivot (tabel di migrasi kamu)
-            'guru_nip',              // Foreign Key di tabel pivot untuk model ini (Guru)
-            'matpel_kode',           // Foreign Key di tabel pivot untuk model lawan (Matpel)
-            'nip',                   // Primary Key lokal (Guru)
-            'kode'                   // Primary Key lawan (Matpel)
-        )->withPivot('kelas_id');    // Opsional: Jika ingin mengambil data kelas_id juga
+            Matpel::class,
+            'pengajarans',
+            'guru_nip',
+            'matpel_kode',
+            'nip',
+            'kode'
+        )->withPivot('kelas_id');
     }
     public function pengajarans()
     {

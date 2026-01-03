@@ -34,6 +34,6 @@ const menus = [
                 {{ menu.label }}
             </SidebarMenu>
         </div>
-        <div class="border-t border-neutral-200 p-4 text-xs text-neutral-400">© 2024 Your Company</div>
+        <div class="border-t border-neutral-200 p-4 text-xs text-neutral-400">© 2025 SMK PASUNDAN 2 BDG</div>
     </aside>
 </template>

@@ -19,6 +19,7 @@ Route::post('login', [LoginController::class, 'checkLogin'])->name('login.check'
 Route::get('logout', [LoginController::class, 'logout'])->name('auth.logout');
 //authenticated guarded
 Route::middleware('authenticated')->group(function () {
+
     Route::get('/profile', ProfileController::class)->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::put('/password', [ProfileController::class, 'updatePassword'])->name('password.update');

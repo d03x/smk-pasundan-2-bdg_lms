@@ -8,8 +8,10 @@ import { ArrowLeft, RefreshCw, Save, User } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 import { toast } from 'vue-sonner';
 
+// 1. UPDATE PROPS: Terima data matpels
 const props = defineProps<{
-    guru: any; 
+    guru: any;
+    matpels: Array<{ kode: string; nama: string }>; 
 }>();
 
 const breadcrumbs = [
@@ -21,7 +23,7 @@ const breadcrumbs = [
     { label: 'Edit Data' },
 ];
 
-// Inisialisasi form dengan data yang ada
+// 2. UPDATE FORM: Inisialisasi matpel_kode dari data database
 const form = useForm({
     name: props.guru.user?.name || '',
     nip: props.guru.nip || '',
@@ -29,7 +31,8 @@ const form = useForm({
     status: props.guru.status || 'aktif',
     gelar_depan: props.guru.gelar_depan || '',
     gelar_belakang: props.guru.gelar_belakang || '',
-    foto: null as File | null, // Foto baru dimulai sebagai null
+    matpel_kode: props.guru.matpel_kode || '', // Ambil nilai lama atau kosong
+    foto: null as File | null,
 });
 
 const previewUrl = ref<string | null>(props.guru.foto_url);
@@ -40,7 +43,7 @@ const handleFileUpload = (event: Event) => {
         const file = target.files[0];
         if (file.size > 2 * 1024 * 1024) {
             toast.error('Ukuran file maksimal 2MB');
-            target.value = ''; // Reset input file
+            target.value = '';
             return;
         }
         form.foto = file;
@@ -49,16 +52,16 @@ const handleFileUpload = (event: Event) => {
 };
 
 const submit = () => {
+    // Saat submit, matpel_kode otomatis terkirim karena ada di dalam object form
     form.submit(
         updateGuru({
             id: props.guru.nip,
         }),
         {
             preserveScroll: true,
-            onSuccess: (page : any) => {
+            onSuccess: (page: any) => {
                 toast.success((page.props.flash as any)?.success || 'Data berhasil diperbarui');
                 form.foto = null;
-                // Update previewUrl dengan data terbaru dari server jika kembali
                 if ((page.props.guru as any)?.foto_url) {
                     previewUrl.value = page.props.guru.foto_url;
                 }
@@ -82,11 +85,11 @@ const previewNama = computed(() => {
 <template>
     <div class="min-h-screen w-full bg-gray-50/50 pb-20 font-sans">
         <div class="mb-4 flex flex-col gap-4 px-1 sm:flex-row sm:items-center sm:justify-between">
-                <Breadcrumb :items="breadcrumbs" />
+            <Breadcrumb :items="breadcrumbs" />
 
             <div class="flex gap-3">
                 <Link
-                    :href="UserManagementController.guru()"
+                    :href="UserManagementController.guru().url"
                     class="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:ring-2 focus:ring-gray-200"
                 >
                     <ArrowLeft class="h-4 w-4" />
@@ -204,6 +207,28 @@ const previewNama = computed(() => {
                             <p v-if="form.errors.jenis_kelamin" class="mt-1 text-xs text-red-500">{{ form.errors.jenis_kelamin }}</p>
                         </div>
 
+                        <div class="md:col-span-2">
+                            <label class="mb-1.5 block text-sm font-medium text-gray-700"> 
+                                Keahlian Utama / Mata Pelajaran 
+                                <span class="text-gray-400 text-xs font-normal">(Opsional)</span>
+                            </label>
+                            <div class="relative">
+                                <select
+                                    v-model="form.matpel_kode"
+                                    class="w-full appearance-none rounded-lg border bg-neutral-50 px-3 py-2 text-sm transition-all outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+                                    :class="form.errors.matpel_kode ? 'border-red-500 ring-red-200' : 'border-neutral-200'"
+                                >
+                                    <option value="">-- Tidak Memiliki Mapel Khusus --</option>
+                                    <option v-for="mapel in props.matpels" :key="mapel.kode" :value="mapel.kode">
+                                        {{ mapel.kode }} - {{ mapel.nama }}
+                                    </option>
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+                                    <svg class="h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                                </div>
+                            </div>
+                            <p v-if="form.errors.matpel_kode" class="mt-1 text-xs text-red-500">{{ form.errors.matpel_kode }}</p>
+                        </div>
                         <div class="col-span-full my-2 border-t border-gray-100"></div>
 
                         <div class="md:col-span-2">
@@ -211,11 +236,7 @@ const previewNama = computed(() => {
                             <div class="flex gap-4">
                                 <label
                                     class="relative flex w-full cursor-pointer rounded-lg border bg-white p-4 shadow-sm transition-all focus:outline-none md:w-1/2"
-                                    :class="
-                                        form.status === 'aktif'
-                                            ? 'border-indigo-600 bg-indigo-50 ring-1 ring-indigo-600'
-                                            : 'border-gray-300 hover:border-gray-400'
-                                    "
+                                    :class="form.status === 'aktif' ? 'border-indigo-600 bg-indigo-50 ring-1 ring-indigo-600' : 'border-gray-300 hover:border-gray-400'"
                                 >
                                     <input type="radio" name="status" value="aktif" v-model="form.status" class="sr-only" />
                                     <span class="flex flex-1">
@@ -225,26 +246,13 @@ const previewNama = computed(() => {
                                         </span>
                                     </span>
                                     <span class="h-5 w-5 text-indigo-600" v-if="form.status === 'aktif'">
-                                        <svg viewBox="0 0 24 24" fill="none" class="h-5 w-5">
-                                            <circle cx="12" cy="12" r="12" fill="currentColor" fill-opacity="0.2"></circle>
-                                            <path
-                                                d="M7 13l3 3 7-7"
-                                                stroke="currentColor"
-                                                stroke-width="1.5"
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                            ></path>
-                                        </svg>
+                                        <svg viewBox="0 0 24 24" fill="none" class="h-5 w-5"><circle cx="12" cy="12" r="12" fill="currentColor" fill-opacity="0.2"></circle><path d="M7 13l3 3 7-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
                                     </span>
                                 </label>
 
                                 <label
                                     class="relative flex w-full cursor-pointer rounded-lg border bg-white p-4 shadow-sm transition-all focus:outline-none md:w-1/2"
-                                    :class="
-                                        form.status === 'nonaktif'
-                                            ? 'border-red-500 bg-red-50 ring-1 ring-red-500'
-                                            : 'border-gray-300 hover:border-gray-400'
-                                    "
+                                    :class="form.status === 'nonaktif' ? 'border-red-500 bg-red-50 ring-1 ring-red-500' : 'border-gray-300 hover:border-gray-400'"
                                 >
                                     <input type="radio" name="status" value="nonaktif" v-model="form.status" class="sr-only" />
                                     <span class="flex flex-1">

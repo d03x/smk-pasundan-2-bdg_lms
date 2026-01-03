@@ -35,7 +35,15 @@ const closeModal = () => {
 watch(
     search,
     debounce((value: string) => {
-        router.get(page.value.url, { search: value }, { preserveState: true, preserveScroll: true, replace: true });
+        router.get(
+            UserManagementController.guru().url, 
+            { search: value }, 
+            { 
+                preserveState: true, 
+                preserveScroll: true, 
+                replace: true 
+            }
+        );
     }, 300),
 );
 </script>
@@ -77,6 +85,7 @@ watch(
                             <th class="px-6 py-4 font-medium">Informasi Guru</th>
                             <th class="px-6 py-4 font-medium">NIP</th>
                             <th class="px-6 py-4 font-medium">Penugasan</th>
+                            <th class="px-6 py-4 font-medium">Keahlian UTama Utama</th>
                             <th class="px-6 py-4 text-center font-medium">Status</th>
                             <th class="px-6 py-4 text-right font-medium">Aksi</th>
                         </tr>
@@ -111,6 +120,7 @@ watch(
                                     </button>
                                 </div>
                             </td>
+                            <td class="px-6 py-4 text-gray-600">{{ user.guru?.spesialis_matpel?.nama || '-' }}</td>
 
                             <td class="px-6 py-4 text-center">
                                 <span

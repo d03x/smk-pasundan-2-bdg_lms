@@ -5,7 +5,12 @@ import Breadcrumb from '@/features/dashboard-admin/breadcrumb.vue';
 import { Link, useForm } from '@inertiajs/vue3';
 import { ArrowLeft, Save, User } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
-import { toast } from 'vue-sonner'; // 1. Import Toast
+import { toast } from 'vue-sonner';
+
+// 1. Terima data Matpel dari Controller
+const props = defineProps<{
+    matpels: Array<{ kode: string; nama: string }>;
+}>();
 
 const breadcrumbs = [{ label: 'Dashboard', href: '/dashboard' }, { label: 'Manajemen Guru', href: '/users/guru' }, { label: 'Tambah Data' }];
 
@@ -16,6 +21,7 @@ const form = useForm({
     status: 'Aktif',
     gelar_depan: '',
     gelar_belakang: '',
+    matpel_kode: '', // 2. Tambahkan field untuk mapel
     foto: null as File | null,
 });
 
@@ -26,10 +32,9 @@ const handleFileUpload = (event: Event) => {
     if (target.files && target.files[0]) {
         const file = target.files[0];
         
-        // Validasi ukuran file di frontend (contoh: max 2MB)
         if (file.size > 2 * 1024 * 1024) {
             toast.error('Ukuran foto terlalu besar! Maksimal 2MB.');
-            target.value = ''; // Reset input
+            target.value = ''; 
             return;
         }
 
@@ -39,39 +44,21 @@ const handleFileUpload = (event: Event) => {
 };
 
 const submit = () => {
-    // Gunakan form.post agar support upload file
     form.submit(UserManagementController.simpanGuru(), {
         preserveScroll: true,
         onSuccess: (page) => {
-            // 2. Handle Sukses
             form.reset();
-            previewUrl.value = null; // Reset gambar preview
-            
-            // Ambil pesan sukses dari flash message Laravel (jika ada)
+            previewUrl.value = null;
             const flashMessage = (page.props.flash as any)?.success || 'Data Guru berhasil disimpan!';
             toast.success(flashMessage);
         },
         onError: (errors) => {
-            // 3. Handle Error (Validasi Backend)
-            
-            // Opsi A: Tampilkan pesan general
-            toast.error('Gagal menyimpan data. Silakan periksa inputan yang bertanda merah.');
-
-            // Opsi B: Tampilkan list error via Toast (Looping)
-            // Kita ambil error pertama saja agar tidak spamming toast jika error banyak
+            toast.error('Gagal menyimpan data. Silakan periksa inputan.');
             const firstError = Object.values(errors)[0];
             if (firstError) {
                 toast.warning(`Error: ${firstError}`);
             }
-            
-            // Jika ada file error khusus
-            if (errors.foto) {
-                toast.error(errors.foto);
-            }
         },
-        onFinish: () => {
-            // Dijalankan baik sukses maupun gagal (misal: stop loading spinner)
-        }
     });
 };
 
@@ -207,6 +194,28 @@ const previewNama = computed(() => {
                             <p v-if="form.errors.jenis_kelamin" class="mt-1 text-xs text-red-500">{{ form.errors.jenis_kelamin }}</p>
                         </div>
 
+                        <div class="md:col-span-2">
+                            <label class="mb-1.5 block text-sm font-medium text-gray-700"> 
+                                Keahlian Utama / Mata Pelajaran 
+                                <span class="text-gray-400 text-xs font-normal">(Opsional)</span>
+                            </label>
+                            <div class="relative">
+                                <select
+                                    v-model="form.matpel_kode"
+                                    class="w-full appearance-none rounded-lg border bg-neutral-50 px-3 py-2 text-sm transition-all outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+                                    :class="form.errors.matpel_kode ? 'border-red-500 ring-red-200' : 'border-neutral-200'"
+                                >
+                                    <option value="">-- Tidak Memiliki Mapel Khusus --</option>
+                                    <option v-for="mapel in props.matpels" :key="mapel.kode" :value="mapel.kode">
+                                        {{ mapel.kode }} - {{ mapel.nama }}
+                                    </option>
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+                                    <svg class="h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                                </div>
+                            </div>
+                            <p v-if="form.errors.matpel_kode" class="mt-1 text-xs text-red-500">{{ form.errors.matpel_kode }}</p>
+                        </div>
                         <div class="col-span-full my-2 border-t border-gray-100"></div>
 
                         <div class="md:col-span-2">
