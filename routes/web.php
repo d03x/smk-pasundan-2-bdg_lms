@@ -3,12 +3,14 @@
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Guru\JawabanController;
 use App\Http\Controllers\Guru\NilaiController; // Pastikan ini sesuai
+use App\Http\Controllers\Guru\QuizController;
 use App\Http\Controllers\Guru\TugasController;
 use App\Http\Controllers\GuruMateriController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\MateriController;
 use App\Http\Controllers\NotifServiceController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Siswa\QuizController as SiswaQuizController;
 use App\Http\Controllers\TugasSiswaController;
 use Illuminate\Support\Facades\Route;
 
@@ -29,6 +31,16 @@ Route::middleware('authenticated')->group(function () {
     Route::get('/', DashboardController::class)->name('home');
     // --- SISWA ROUTES ---
     Route::middleware('authenticated:siswa')->group(function () {
+        //quiz
+        Route::controller(SiswaQuizController::class)->group(function () {
+
+            Route::get('/quiz', 'index')->name('quiz.index');
+
+            Route::get('/quiz/{quiz}', 'show')->name('quiz.show');
+
+            Route::post('/quiz/{quiz}', 'store')->name('quiz.store');
+        });
+
         Route::get('/siswa/materi', [MateriController::class, 'showMateri'])->name('siswa.materi');
         Route::get('/siswa/tugas', [TugasSiswaController::class, 'showTugas'])->name('siswa.tugas');
         Route::get('/siswa/materi/{id}', [MateriController::class, 'view'])->name('siswa.materi.view');
@@ -46,7 +58,9 @@ Route::middleware('authenticated')->group(function () {
         Route::post('/guru/materi/{kelas_kode?}/simpan-materi', [GuruMateriController::class, 'simpanMateri'])->name('guru.materi.tambah.simpan');
         Route::delete('guru/delete-materi/{materi_id}', [GuruMateriController::class, 'deleteMateri'])->name('guru.materi.delete');
         Route::patch('guru/publish-materi', [GuruMateriController::class, 'publishMateri'])->name('guru.materi.publish');
-
+        Route::prefix('guru')->name('guru.')->group(function () {
+            Route::resource('quiz', QuizController::class);
+        });
         // Tugas
         Route::get('guru/tugas', App\Http\Controllers\Guru\TugasController::class)->name('guru.tugas');
         Route::get('guru/{kelas_id}/tugas', [App\Http\Controllers\Guru\TugasController::class, 'index'])->name('guru.tugas.all_tugas');
