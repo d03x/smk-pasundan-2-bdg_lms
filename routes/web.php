@@ -9,6 +9,7 @@ use App\Http\Controllers\LoginController;
 use App\Http\Controllers\MateriController;
 use App\Http\Controllers\NotifServiceController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SiswaSecurityController;
 use App\Http\Controllers\TugasSiswaController;
 use Illuminate\Support\Facades\Route;
 
@@ -16,6 +17,12 @@ Route::post('/fcm-cloud/save-fcm-token', [NotifServiceController::class, 'saveFc
 Route::get("/send-notification", [NotifServiceController::class, 'testSend'])->name('send');
 Route::get('login', LoginController::class)->name('login');
 Route::post('login', [LoginController::class, 'checkLogin'])->name('login.check');
+// routes/api.php
+Route::get('/update-password', [SiswaSecurityController::class, 'index']);
+Route::post('/check-nisn', [SiswaSecurityController::class, 'checkNisn']);
+Route::post('/reset-password-security', [SiswaSecurityController::class, 'resetPassword']);
+
+
 Route::get('logout', [LoginController::class, 'logout'])->name('auth.logout');
 //authenticated guarded
 Route::middleware('authenticated')->group(function () {
@@ -36,6 +43,12 @@ Route::middleware('authenticated')->group(function () {
         Route::get('siswa/tugas/{id}/kerjakan', [TugasSiswaController::class, 'kerjakan'])->name('siswa.tugas.kerjakan');
         Route::put('siswa/tugas/{id}/kerjakan', [TugasSiswaController::class, 'kerjakanSimpan'])->name('siswa.tugas.kerjakan.kerjakanSimpan');
         Route::delete('siswa/tugas/{id}/kerjakan', [TugasSiswaController::class, 'batalkanPengumpulan'])->name('siswa.tugas.kerjakan.batalkanPengumpulan');
+
+
+        Route::prefix('siswa/keamanan')->name('siswa.keamanan.')->group(function () {
+            Route::get("", SiswaSecurityController::class)->name('index');
+            Route::post("", [SiswaSecurityController::class, 'update'])->name('update');
+        });
     });
 
     // --- GURU ROUTES ---
