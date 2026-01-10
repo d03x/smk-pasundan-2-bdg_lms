@@ -50,10 +50,8 @@ RUN ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
 
 # 12. Optimasi Laravel
 RUN php artisan config:cache && php artisan route:cache
-
 # 13. Atur Permission
 RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
-
 # 14. Expose port 8080
 EXPOSE 8080
 # 15. Jalankan Nginx dan PHP-FPM
