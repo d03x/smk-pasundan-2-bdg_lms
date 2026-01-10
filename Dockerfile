@@ -33,7 +33,8 @@ RUN ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
 
 # 10. Optimasi Laravel
 # Sangat penting dijalankan setelah composer install
-RUN php artisan config:cache && php artisan route:cache
+RUN php artisan config:cache
+# RUN php artisan route:cache
 
 # 11. Atur Permission
 RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
