@@ -42,8 +42,7 @@ RUN composer install --no-interaction --optimize-autoloader --no-dev
 # 10. Install Node dependencies & Build assets menggunakan BUN
 # Bun jauh lebih cepat dan hemat RAM dibandingkan NPM
 RUN bun install
-RUN bun run build -- --logLevel info --clearScreen false
-
+RUN bun run build -- --debug
 # 11. Copy konfigurasi Nginx
 COPY nginx.conf /etc/nginx/sites-available/default
 RUN ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
